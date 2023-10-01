@@ -10,6 +10,13 @@ extern "C" void __disableWiFiAtBootTime(void) {}
 
 static uint8_t disco_mac[6] = {0xa4,0xe5,0x7c,0xbc,0xdb,0xe9};
 
+IRAM_ATTR void stop_party() {
+	uint8_t op = OP_STOP_DISCOTIME;
+	esp_now_send(disco_mac, &op, /* length: */ 1);
+	// delay to prevent re-interrupting from button bounces
+	delay(100);
+}
+
 extern "C" void setup() {
 	esp_now_init();
 	esp_now_set_self_role(ESP_NOW_ROLE_CONTROLLER);
@@ -19,11 +26,8 @@ extern "C" void setup() {
 	esp_now_send(disco_mac, &op, /* length: */ 1);
 
 	pinMode(PARTY_STOP_PIN, INPUT);
+	attachInterrupt(digitalPinToInterrupt(PARTY_STOP_PIN), stop_party, RISING);
 }
 
 extern "C" void loop() {
-	if (digitalRead(PARTY_STOP_PIN)) {
-		uint8_t op = OP_STOP_DISCOTIME;
-		esp_now_send(disco_mac, &op, /* length: */ 1);
-	}
 }
