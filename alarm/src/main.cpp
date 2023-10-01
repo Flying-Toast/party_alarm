@@ -1,6 +1,9 @@
+#include <Arduino.h>
 #include <user_interface.h>
 #include <espnow.h>
 #include "shared_defs.h"
+
+#define PARTY_STOP_PIN D2
 
 // this is a weak symbol in esp8266ArduinoCore code, override it so we save time by not disabling WiFi
 extern "C" void __disableWiFiAtBootTime(void) {}
@@ -14,7 +17,13 @@ extern "C" void setup() {
 
 	uint8_t op = OP_DISCOTIME;
 	esp_now_send(disco_mac, &op, /* length: */ 1);
+
+	pinMode(PARTY_STOP_PIN, INPUT);
 }
 
 extern "C" void loop() {
+	if (digitalRead(PARTY_STOP_PIN)) {
+		uint8_t op = OP_STOP_DISCOTIME;
+		esp_now_send(disco_mac, &op, /* length: */ 1);
+	}
 }
