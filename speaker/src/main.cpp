@@ -8,15 +8,25 @@
 
 static volatile bool playing = false;
 
+void playpause()
+{
+	digitalWrite(PLAYPAUSE_PIN, HIGH);
+	delay(100);
+	digitalWrite(PLAYPAUSE_PIN, LOW);
+
+	playing = !playing;
+	digitalWrite(AMP_POW_PIN, playing);
+}
+
 void handle_op(uint8_t op) {
 	switch (op) {
-		case OP_PLAYPAUSE_MUSIC:
-			digitalWrite(PLAYPAUSE_PIN, HIGH);
-			delay(100);
-			digitalWrite(PLAYPAUSE_PIN, LOW);
-
-			playing = !playing;
-			digitalWrite(AMP_POW_PIN, playing);
+		case OP_PLAY_MUSIC:
+			if (!playing)
+				playpause();
+			break;
+		case OP_PAUSE_MUSIC:
+			if (playing)
+				playpause();
 			break;
 		default:
 			// unsupported op

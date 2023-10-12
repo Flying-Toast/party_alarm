@@ -6,8 +6,9 @@
 enum packet_op {
 	OP_LIGHTS_OFF = 0,
 	OP_DISCOTIME,
-	OP_PLAYPAUSE_MUSIC,
+	OP_PLAY_MUSIC,
 	OP_STOP_DISCOTIME,
+	OP_PAUSE_MUSIC,
 };
 
 #endif
