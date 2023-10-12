@@ -9,15 +9,20 @@
 extern "C" void __disableWiFiAtBootTime(void) {}
 
 static uint8_t disco_mac[6] = {0xa4,0xe5,0x7c,0xbc,0xdb,0xe9};
+static uint8_t speaker_mac[6] = {0x84,0xf3,0xeb,0xb2,0x32,0x9e};
 
 void stop_party() {
 	uint8_t op = OP_STOP_DISCOTIME;
 	esp_now_send(disco_mac, &op, /* length: */ 1);
+	op = OP_PLAYPAUSE_MUSIC;
+	esp_now_send(speaker_mac, &op, /* length: */ 1);
 }
 
 void start_party() {
 	uint8_t op = OP_DISCOTIME;
 	esp_now_send(disco_mac, &op, /* length: */ 1);
+	op = OP_PLAYPAUSE_MUSIC;
+	esp_now_send(speaker_mac, &op, /* length: */ 1);
 }
 
 extern "C" void setup() {
