@@ -25,7 +25,7 @@ void start_party() {
 	esp_now_send(speaker_mac, &op, /* length: */ 1);
 }
 
-extern "C" void setup() {
+void setup() {
 	esp_now_init();
 	esp_now_set_self_role(ESP_NOW_ROLE_CONTROLLER);
 	esp_now_add_peer(disco_mac, ESP_NOW_ROLE_SLAVE, 1, NULL, 0);
@@ -41,5 +41,5 @@ extern "C" void setup() {
 	ESP.deepSleep(0, WAKE_RF_DISABLED);
 }
 
-extern "C" void loop() {
+void loop() {
 }
