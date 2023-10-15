@@ -7,29 +7,37 @@
 #define AMP_POW_PIN D8
 #define PLAYBACK_MON_PIN D2
 
-static volatile bool amp_powered = false;
+static volatile bool playback = false;
+static volatile bool triggered = false;
 
-IRAM_ATTR void playback_change() {
-	amp_powered = !amp_powered;
-	digitalWrite(AMP_POW_PIN, amp_powered);
-}
-
-void playpause()
-{
+void playpause() {
 	digitalWrite(PLAYPAUSE_PIN, HIGH);
 	delay(100);
 	digitalWrite(PLAYPAUSE_PIN, LOW);
 }
 
+IRAM_ATTR void playback_change() {
+	playback = !playback;
+	if (playback && !triggered) {
+		playpause();
+	}
+	digitalWrite(AMP_POW_PIN, playback && triggered);
+}
+
 void handle_op(uint8_t op) {
 	switch (op) {
 		case OP_PLAY_MUSIC:
-			if (!amp_powered)
+			if (!triggered) {
+				triggered = true;
 				playpause();
+			}
 			break;
 		case OP_PAUSE_MUSIC:
-			if (amp_powered)
-				playpause();
+			if (triggered) {
+				triggered = false;
+				if (playback)
+					playpause();
+			}
 			break;
 		default:
 			// unsupported op
@@ -55,7 +63,6 @@ void setup() {
 		playback_change,
 		CHANGE
 	);
-
 
 	WiFi.mode(WIFI_STA);
 	esp_now_init();
