@@ -19,18 +19,19 @@ void playpause() {
 	digitalWrite(PLAYPAUSE_PIN, LOW);
 }
 
+void do_discotime_message() {
+	uint8_t op = OP_DISCOTIME;
+	esp_now_send(disco_mac, &op, /* length: */ 1);
+}
+
 IRAM_ATTR void playback_change() {
 	playback = !playback;
-	if (playback && !triggered) {
-		playpause();
-	}
 
 	if (playback && triggered) {
 		digitalWrite(AMP_POW_PIN, HIGH);
 		if (send_discotime) {
 			delay(500);
-			uint8_t op = OP_DISCOTIME;
-			esp_now_send(disco_mac, &op, /* length: */ 1);
+			do_discotime_message();
 			send_discotime = false;
 		}
 	} else {
@@ -47,7 +48,15 @@ void handle_op(uint8_t op) {
 		case OP_PLAY_MUSIC:
 			if (!triggered) {
 				triggered = true;
-				playpause();
+				if (playback) {
+					digitalWrite(AMP_POW_PIN, HIGH);
+					if (send_discotime) {
+						do_discotime_message();
+						send_discotime = false;
+					}
+				} else {
+					playpause();
+				}
 			}
 			break;
 		case OP_PAUSE_MUSIC:
