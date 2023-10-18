@@ -7,8 +7,11 @@
 #define AMP_POW_PIN D8
 #define PLAYBACK_MON_PIN D2
 
+static uint8_t disco_mac[6] = {0xa4,0xe5,0x7c,0xbc,0xdb,0xe9};
+
 static volatile bool playback = false;
 static volatile bool triggered = false;
+static volatile bool send_discotime = false;
 
 void playpause() {
 	digitalWrite(PLAYPAUSE_PIN, HIGH);
@@ -21,11 +24,26 @@ IRAM_ATTR void playback_change() {
 	if (playback && !triggered) {
 		playpause();
 	}
-	digitalWrite(AMP_POW_PIN, playback && triggered);
+
+	if (playback && triggered) {
+		digitalWrite(AMP_POW_PIN, HIGH);
+		if (send_discotime) {
+			delay(500);
+			uint8_t op = OP_DISCOTIME;
+			esp_now_send(disco_mac, &op, /* length: */ 1);
+			send_discotime = false;
+		}
+	} else {
+		digitalWrite(AMP_POW_PIN, LOW);
+	}
 }
 
 void handle_op(uint8_t op) {
 	switch (op) {
+		case OP_PLAY_MUSIC_WITH_DISCOTIME:
+			if (!triggered)
+				send_discotime = true;
+			// case fallthrough intentional...
 		case OP_PLAY_MUSIC:
 			if (!triggered) {
 				triggered = true;
@@ -66,7 +84,8 @@ void setup() {
 
 	WiFi.mode(WIFI_STA);
 	esp_now_init();
-	esp_now_set_self_role(ESP_NOW_ROLE_SLAVE);
+	esp_now_set_self_role(ESP_NOW_ROLE_COMBO);
+	esp_now_add_peer(disco_mac, ESP_NOW_ROLE_SLAVE, 1, NULL, 0);
 	esp_now_register_recv_cb(recv_callback);
 }
 
